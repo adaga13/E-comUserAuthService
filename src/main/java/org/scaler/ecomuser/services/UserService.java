@@ -1,6 +1,9 @@
 package org.scaler.ecomuser.services;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.scaler.ecomuser.dtos.SendEmailEventDto;
 import org.scaler.ecomuser.exceptions.InvalidTokenException;
 import org.scaler.ecomuser.exceptions.UserAlreadyExistsException;
 import org.scaler.ecomuser.exceptions.UserNotFoundException;
@@ -8,6 +11,8 @@ import org.scaler.ecomuser.models.EcomUser;
 import org.scaler.ecomuser.models.Token;
 import org.scaler.ecomuser.repositories.TokenRepository;
 import org.scaler.ecomuser.repositories.UserRepository;
+import org.slf4j.Logger;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -26,14 +31,26 @@ public class UserService {
 
     private final PasswordEncoder passwordEncoder;
 
-    public UserService(UserRepository userRepository, TokenRepository tokenRepository, PasswordEncoder passwordEncoder) {
+    private final KafkaTemplate<String, String> kafkaTemplate;
+
+    private final ObjectMapper objectMapper;
+
+    private final Logger logger;
+
+    public UserService(UserRepository userRepository, TokenRepository tokenRepository, PasswordEncoder passwordEncoder,
+                       KafkaTemplate<String, String> kafkaTemplate, Logger logger) {
         this.userRepository = userRepository;
         this.tokenRepository = tokenRepository;
         this.passwordEncoder = passwordEncoder;
+        this.kafkaTemplate = kafkaTemplate;
+        this.objectMapper = new ObjectMapper();
+        this.logger = logger;
     }
 
     public EcomUser signup(String name, String email, String password) {
         userRepository.findByEmail(email).ifPresent((val) -> {
+            if (logger.isDebugEnabled())
+                logger.debug("Signup failed as user with email : {} already exists.", email);
             throw new UserAlreadyExistsException("User with email " + email + " is already registered.");
         });
 
@@ -42,7 +59,21 @@ public class UserService {
                 .hashedPassword(passwordEncoder.encode(password))
                 .build();
 
-        return userRepository.save(ecomUser);
+        EcomUser user = userRepository.save(ecomUser);
+        if (logger.isDebugEnabled())
+            logger.debug("User with email : {} signed up successfully. Triggering kafka event now.", email);
+        SendEmailEventDto sendEmailEventDto = new SendEmailEventDto();
+        sendEmailEventDto.setFrom("aashishdaga13@gmail.com");
+        sendEmailEventDto.setTo(email);
+        sendEmailEventDto.setSubject("Thanks for Signing Up");
+        sendEmailEventDto.setBody("You have signed up successfully.");
+
+        try {
+            kafkaTemplate.send("sendEmail", objectMapper.writeValueAsString(sendEmailEventDto));
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+        return user;
     }
 
     public String login(String email, String password) throws UserNotFoundException {
@@ -51,7 +82,6 @@ public class UserService {
 
          if (!passwordEncoder.matches(password, existingUser.getHashedPassword()))
              throw new UserNotFoundException("Bad credentials.");
-
 
         LocalDate today = LocalDate.now();
         LocalDate thirtyDaysLater = today.plus(30, ChronoUnit.DAYS);

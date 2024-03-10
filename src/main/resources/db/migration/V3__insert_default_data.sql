@@ -1,0 +1,9 @@
+insert into client
+(id, client_id, client_secret, client_name, client_authentication_methods, authorization_grant_types, redirect_uris, post_logout_redirect_uris, scopes, client_settings, token_settings)
+values ('90afab93-961c-49f6-9da0-74ff4ef3767f', 'oidc-client', '$2a$12$IU1Huw.8elQFGAR7YSLtS.fZwc.VSEY6UACICMfZyrNZVraZzZROm', '90afab93-961c-49f6-9da0-74ff4ef3767f', 'client_secret_basic', 'refresh_token,authorization_code', 'https://oauth.pstmn.io/v1/callback', 'https://oauth.pstmn.io/v1/callback', 'openid,profile', '{"@class":"java.util.Collections$UnmodifiableMap","settings.client.require-proof-key":false,"settings.client.require-authorization-consent":true}', '{"@class":"java.util.Collections$UnmodifiableMap","settings.token.reuse-refresh-tokens":true,"settings.token.id-token-signature-algorithm":["org.springframework.security.oauth2.jose.jws.SignatureAlgorithm","RS256"],"settings.token.access-token-time-to-live":["java.time.Duration",600.000000000],"settings.token.access-token-format":{"@class":"org.springframework.security.oauth2.server.authorization.settings.OAuth2TokenFormat","value":"self-contained"},"settings.token.refresh-token-time-to-live":["java.time.Duration",3600.000000000],"settings.token.authorization-code-time-to-live":["java.time.Duration",600.000000000],"settings.token.device-code-time-to-live":["java.time.Duration",600.000000000]}');
+
+insert into role (id, name, is_deleted, created_at, last_updated_at)
+values (1, 'ADMIN', false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), (2, 'Customer', false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+
+insert into ecom_user (id, name, email, hashed_password, is_deleted, is_email_verified, created_at, last_updated_at)
+values (1, 'admin-user', 'admin123@gmail.com', '$2a$12$FDq.HV1kYXVF49wOX4uexeveLqo3VClBlxEvTk.bf6DWdF3c8lJzS', false, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);

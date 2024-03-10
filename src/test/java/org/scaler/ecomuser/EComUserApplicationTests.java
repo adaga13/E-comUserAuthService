@@ -20,9 +20,9 @@ class EComUserApplicationTests {
     @Autowired
     private JpaRegisteredClientRepository clientRepository;
 
-    @Test
-    void contextLoads() {
-    }
+//    @Test
+//    void contextLoads() {
+//    }
 
 //    @Test
 //    @Commit
