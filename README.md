@@ -11,7 +11,8 @@ Service to handle authentication as well as authorization.
 Set these environment variables containing database credentials.
 `USER_SERVICE_DB_URL=jdbc:mysql://<host>:3306/<db_name>;
 USER_SERVICE_DB_USERNAME=<db_username>;
-USER_SERVICE_DB_PASSWORD=<db_password>`
+USER_SERVICE_DB_PASSWORD=<db_password>
+FROM_EMAIL_ID=<email_id_from_which_email_will_be_sent>`
 
 ## **Running the application locally**
 `mvn spring-boot:run`

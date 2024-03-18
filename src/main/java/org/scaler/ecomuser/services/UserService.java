@@ -12,6 +12,7 @@ import org.scaler.ecomuser.models.Token;
 import org.scaler.ecomuser.repositories.TokenRepository;
 import org.scaler.ecomuser.repositories.UserRepository;
 import org.slf4j.Logger;
+import org.springframework.core.env.Environment;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -37,14 +38,17 @@ public class UserService {
 
     private final Logger logger;
 
+    private Environment environment;
+
     public UserService(UserRepository userRepository, TokenRepository tokenRepository, PasswordEncoder passwordEncoder,
-                       KafkaTemplate<String, String> kafkaTemplate, Logger logger) {
+                       KafkaTemplate<String, String> kafkaTemplate, Logger logger, Environment environment) {
         this.userRepository = userRepository;
         this.tokenRepository = tokenRepository;
         this.passwordEncoder = passwordEncoder;
         this.kafkaTemplate = kafkaTemplate;
         this.objectMapper = new ObjectMapper();
         this.logger = logger;
+        this.environment = environment;
     }
 
     public EcomUser signup(String name, String email, String password) {
@@ -63,7 +67,7 @@ public class UserService {
         if (logger.isDebugEnabled())
             logger.debug("User with email : {} signed up successfully. Triggering kafka event now.", email);
         SendEmailEventDto sendEmailEventDto = new SendEmailEventDto();
-        sendEmailEventDto.setFrom("aashishdaga13@gmail.com");
+        sendEmailEventDto.setFrom(environment.getProperty("email.from.id"));
         sendEmailEventDto.setTo(email);
         sendEmailEventDto.setSubject("Thanks for Signing Up");
         sendEmailEventDto.setBody("You have signed up successfully.");
